@@ -11,6 +11,7 @@ class SequenceGeneratorTest extends TestCase
      */
     public function testSequenceGenerator()
     {
+
         // PREFIX から始まる連番を生成
         /** @var SequenceGenerator $firstSeq */
         // SequenceGeneratorのgetInstanceメソッド呼び出し
@@ -49,14 +50,20 @@ class SequenceGeneratorTest extends TestCase
 
 class SequenceGenerator
 {
-    // ここに実装する
-
     private static $instance = null;
-    private static $counters = []; //連番
+    private static $counters;
 
-    //必須要件：インスタンスを返す。
+    private static function init()
+    {
+        self::$counters = collect();
+    }
+
     public static function getInstance()
     {
+        // カウンタの初期化
+        if (is_null(self::$counters)) {
+            self::init();
+        }
         // インスタンスが無い(null)場合作成する。
         if (self::$instance === null) {
             self::$instance = new self();
@@ -64,22 +71,20 @@ class SequenceGenerator
         return self::$instance;
     }
 
-    //必須要件：引数で指定された Prefix を持つ連番を指定件数配列で返す。
+    // 引数で指定された Prefix を持つ連番を指定件数配列で返す
     public static function take($prefix, $count)
     {
-        // カウントの初期化。
-        if (!isset(self::$counters[$prefix])) {
-            self::$counters[$prefix] = 0;
+        // カウンタの初期化。
+        if (!self::$counters->has($prefix)) {
+            self::$counters->put($prefix, 0);
         }
-
-        // 引数で受け取ったカウント分の連想配列を生成する。
+        // 引数で受け取ったカウント分の連番を生成する。
         $result = [];
         for ($i = 1; $i <= $count; $i++) {
-            self::$counters[$prefix]++;
-            $result[] = $prefix . '-' . self::$counters[$prefix];
+            $result[] = $prefix . '-' . (self::$counters->get($prefix) + $i);
         }
-        // print_r($result);
+        self::$counters->put($prefix, self::$counters->get($prefix) + $count); // カウンタ更新
+
         return $result;
     }
 }
-
